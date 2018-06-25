@@ -17,6 +17,7 @@ add_lldb_library(lldbSymbol NO_PLUGIN_DEPENDENCIES
   ObjectContainer.cpp
   ObjectFile.cpp
   PostfixExpression.cpp
+  RustASTContext.cpp
   Symbol.cpp
   SymbolContext.cpp
   SymbolFile.cpp

@@ -82,6 +82,7 @@ public:
   friend class DWARFCompileUnit;
   friend class DWARFDIE;
   friend class DWARFASTParser;
+  friend class DWARFASTParserRust;
 
   // Static Functions
   static void Initialize();
