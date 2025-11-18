@@ -1946,21 +1946,15 @@ class DIInterfaceHoldingType : public DIType {
   DIInterfaceHoldingType(LLVMContext &C, StorageType Storage, ArrayRef<Metadata *> Ops);
   ~DIInterfaceHoldingType() = default;
 
-  static DIInterfaceHoldingType *getImpl(LLVMContext &C, DIType *BaseType,
-					 ArrayRef<DIType *> Interfaces,
-					 StorageType Storage, bool ShouldCreate = true) {
-    ArrayRef<Metadata *> AI = Interfaces;
-    return getImpl(C, BaseType, AI, Storage, ShouldCreate);
-  }
   static DIInterfaceHoldingType *getImpl(LLVMContext &C, Metadata *BaseType,
-					 ArrayRef<Metadata *> Interfaces,
+					 DINodeArray Interfaces,
 					 StorageType Storage, bool ShouldCreate = true);
 
 public:
 
-  DEFINE_MDNODE_GET(DIInterfaceHoldingType, (DIType *BaseType, ArrayRef<DIType *> Ifaces),
+  DEFINE_MDNODE_GET(DIInterfaceHoldingType, (DIType *BaseType, DINodeArray Ifaces),
 		    (BaseType, Ifaces));
-  DEFINE_MDNODE_GET(DIInterfaceHoldingType, (Metadata *BaseType, ArrayRef<Metadata *> Ifaces),
+  DEFINE_MDNODE_GET(DIInterfaceHoldingType, (Metadata *BaseType, DINodeArray Ifaces),
 		    (BaseType, Ifaces));
 
   DIType *getBaseType() const { return cast_or_null<DIType>(getRawBaseType()); }
