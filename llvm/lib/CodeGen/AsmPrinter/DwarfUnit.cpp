@@ -1032,6 +1032,9 @@ void DwarfUnit::addDiscriminant(DIE &Variant, Constant *Discriminant,
   }
 }
 
+void DwarfUnit::constructTypeDIE(DIE &Buffer, const DIInterfaceHoldingType *CTy) {
+}
+
 void DwarfUnit::constructTypeDIE(DIE &Buffer, const DICompositeType *CTy) {
   // Add name if not anonymous or intermediate type.
   StringRef Name = CTy->getName();

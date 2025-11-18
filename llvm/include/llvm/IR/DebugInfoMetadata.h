@@ -198,6 +198,7 @@ public:
     case DISubrangeTypeKind:
     case DIDerivedTypeKind:
     case DICompositeTypeKind:
+    case DIInterfaceHoldingTypeKind:
     case DISubroutineTypeKind:
     case DIFileKind:
     case DICompileUnitKind:
@@ -550,6 +551,7 @@ public:
     case DIStringTypeKind:
     case DISubrangeTypeKind:
     case DIDerivedTypeKind:
+    case DIInterfaceHoldingTypeKind:
     case DICompositeTypeKind:
     case DISubroutineTypeKind:
     case DIFileKind:
@@ -820,6 +822,7 @@ public:
     case DIStringTypeKind:
     case DISubrangeTypeKind:
     case DIDerivedTypeKind:
+    case DIInterfaceHoldingTypeKind:
     case DICompositeTypeKind:
     case DISubroutineTypeKind:
       return true;
@@ -1925,6 +1928,46 @@ public:
 
   static bool classof(const Metadata *MD) {
     return MD->getMetadataID() == DICompositeTypeKind;
+  }
+};
+
+/// Type that holds interface types.
+/// In a language like Rust, where an arbitrary type can implement any
+/// number of interfaces, this type can be used.  In DWARF it will be
+/// emitted as the underlying type with interface types attached.
+/// This was implemented in this "inverted" way because modifying all
+/// other types to allow interfaces seemed too invasive.
+class DIInterfaceHoldingType : public DIType {
+  friend class LLVMContextImpl;
+  friend class MDNode;
+
+  static constexpr unsigned MY_FIRST_OPERAND = DIType::N_OPERANDS;
+
+  DIInterfaceHoldingType(LLVMContext &C, StorageType Storage, ArrayRef<Metadata *> Ops);
+  ~DIInterfaceHoldingType() = default;
+
+  static DIInterfaceHoldingType *getImpl(LLVMContext &C, DIType *BaseType,
+					 ArrayRef<DIType *> Interfaces,
+					 StorageType Storage, bool ShouldCreate = true) {
+    ArrayRef<Metadata *> AI = Interfaces;
+    return getImpl(C, BaseType, AI, Storage, ShouldCreate);
+  }
+  static DIInterfaceHoldingType *getImpl(LLVMContext &C, Metadata *BaseType,
+					 ArrayRef<Metadata *> Interfaces,
+					 StorageType Storage, bool ShouldCreate = true);
+
+public:
+
+  DEFINE_MDNODE_GET(DIInterfaceHoldingType, (DIType *BaseType, ArrayRef<DIType *> Ifaces),
+		    (BaseType, Ifaces));
+  DEFINE_MDNODE_GET(DIInterfaceHoldingType, (Metadata *BaseType, ArrayRef<Metadata *> Ifaces),
+		    (BaseType, Ifaces));
+
+  DIType *getBaseType() const { return cast_or_null<DIType>(getRawBaseType()); }
+  Metadata *getRawBaseType() const { return getOperand(MY_FIRST_OPERAND); }
+
+  static bool classof(const Metadata *MD) {
+    return MD->getMetadataID() == DISubrangeTypeKind;
   }
 };
 

@@ -378,6 +378,7 @@ private:
   void constructTypeDIE(DIE &Buffer, const DIStringType *BTy);
   void constructTypeDIE(DIE &Buffer, const DIDerivedType *DTy);
   void constructTypeDIE(DIE &Buffer, const DISubroutineType *CTy);
+  void constructTypeDIE(DIE &Buffer, const DIInterfaceHoldingType *CTy);
   void constructSubrangeDIE(DIE &Buffer, const DISubrangeType *SR,
                             bool ForArray = false);
   void constructSubrangeDIE(DIE &Buffer, const DISubrange *SR);
