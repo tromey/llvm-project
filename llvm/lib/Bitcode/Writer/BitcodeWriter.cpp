@@ -357,6 +357,8 @@ private:
                           SmallVectorImpl<uint64_t> &Record, unsigned Abbrev);
   void writeDISubrangeType(const DISubrangeType *N,
                            SmallVectorImpl<uint64_t> &Record, unsigned Abbrev);
+  void writeDIInterfaceHoldingType(const DIInterfaceHoldingType &N,
+                            SmallVectorImpl<uint64_t> &Record, unsigned Abbrev);
   void writeDICompositeType(const DICompositeType *N,
                             SmallVectorImpl<uint64_t> &Record, unsigned Abbrev);
   void writeDISubroutineType(const DISubroutineType *N,
@@ -2025,6 +2027,14 @@ void ModuleBitcodeWriter::writeDISubrangeType(const DISubrangeType *N,
 
   Stream.EmitRecord(bitc::METADATA_SUBRANGE_TYPE, Record, Abbrev);
   Record.clear();
+}
+
+void ModuleBitcodeWriter::writeDIInterfaceHoldingType(const DIInterfaceHoldingType *N,
+						      SmallVectorImpl<uint64_t> &Record,
+						      unsigned Abbrev) {
+  Record.push_back(N->isDistinct());
+  Record.push_back(VE.getMetadataOrNullID(N->getRawBaseType()));
+  Record.push_back(VE.getMetadataOrNullID(N->getRawInterfaces()));
 }
 
 void ModuleBitcodeWriter::writeDICompositeType(
