@@ -5916,6 +5916,20 @@ bool LLParser::parseDIDerivedType(MDNode *&Result, bool IsDistinct) {
   return false;
 }
 
+/// parseDIInterfaceHoldingType:
+///   ::= !DIInterfaceHoldingType(baseType: !0, interfaces: !1)
+bool LLParser::parseDIInterfaceHoldingType(MDNode *&Result, bool IsDistinct) {
+#define VISIT_MD_FIELDS(OPTIONAL, REQUIRED)                                    \
+  REQUIRED(baseType, MDField, );                                               \
+  REQUIRED(interfaces, MDField, );
+  PARSE_MD_FIELDS();
+#undef VISIT_MD_FIELDS
+
+  Result = GET_OR_DISTINCT(DIInterfaceHoldingType,
+			   (Context, baseType.Val, interfaces.Val));
+  return false;
+}
+
 bool LLParser::parseDICompositeType(MDNode *&Result, bool IsDistinct) {
 #define VISIT_MD_FIELDS(OPTIONAL, REQUIRED)                                    \
   REQUIRED(tag, DwarfTagField, );                                              \
