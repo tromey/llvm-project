@@ -603,13 +603,10 @@ DIE *DwarfUnit::createTypeDIE(const DICompositeType *Ty) {
   return &TyDIE;
 }
 
-DIE *DwarfUnit::createTypeDIE(const DIScope *Context, DIE &ContextDIE,
-                              const DIType *Ty) {
-  // Create new type.
-  DIE &TyDIE = createAndAddDIE(Ty->getTag(), ContextDIE, Ty);
-
+void DwarfUnit::constructTypeDIE(DIE &ContextDIE, const DIType *Ty, bool updateAccel) {
   auto construct = [&](const auto *Ty) {
-    updateAcceleratorTables(Context, Ty, TyDIE);
+    if (updateAccel)
+      updateAcceleratorTables(Context, Ty, TyDIE);
     constructTypeDIE(TyDIE, Ty);
   };
 
@@ -637,9 +634,17 @@ DIE *DwarfUnit::createTypeDIE(const DIScope *Context, DIE &ContextDIE,
     construct(STy);
   else if (auto *SRTy = dyn_cast<DISubrangeType>(Ty))
     constructSubrangeDIE(TyDIE, SRTy);
+  else if (auto *IHT = dyn_cast<DIInterfaceHoldingType>(Ty))
+    construct(IHT);
   else
     construct(cast<DIDerivedType>(Ty));
+}
 
+DIE *DwarfUnit::createTypeDIE(const DIScope *Context, DIE &ContextDIE,
+                              const DIType *Ty) {
+  // Create new type.
+  DIE &TyDIE = createAndAddDIE(Ty->getTag(), ContextDIE, Ty);
+  constructTypeDIE(TyDIE, Ty);
   return &TyDIE;
 }
 
@@ -1033,6 +1038,17 @@ void DwarfUnit::addDiscriminant(DIE &Variant, Constant *Discriminant,
 }
 
 void DwarfUnit::constructTypeDIE(DIE &Buffer, const DIInterfaceHoldingType *CTy) {
+  // A DIInterfaceHoldingType is emitted in a special way: the
+  // underlying type is emitted directly, and then the interfaces are
+  // attached to it.  Note we don't update the accelerator table here,
+  // as that's already been done.
+  constructTypeDIE(Buffer, CTy->getBaseType(), false);
+
+  for (const auto *IFace : CTy->getInterfaces()) {
+    DIE &Inh = createAndAddDIE(dwarf::DW_TAG_inheritance, Buffer);
+    DIE *IFDie = getOrCreateTypeDIE(IFace);
+    addDIEEntry(Inh, dwarf::DW_AT_type, *IFDie);
+  }
 }
 
 void DwarfUnit::constructTypeDIE(DIE &Buffer, const DICompositeType *CTy) {
