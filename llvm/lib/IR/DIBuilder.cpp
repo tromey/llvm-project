@@ -462,6 +462,11 @@ static ConstantAsMetadata *getConstantOrNull(Constant *C) {
   return nullptr;
 }
 
+DIInterfaceHoldingType *DIBuilder::createInterfaceHoldingType(DIType *Ty,
+							      DINodeArray Ifaces) {
+  return DIInterfaceHoldingType::get(VMContext, Ty, Ifaces);
+}
+
 DIDerivedType *DIBuilder::createVariantMemberType(
     DIScope *Scope, StringRef Name, DIFile *File, unsigned LineNumber,
     uint64_t SizeInBits, uint32_t AlignInBits, uint64_t OffsetInBits,

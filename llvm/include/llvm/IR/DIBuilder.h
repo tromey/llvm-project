@@ -372,6 +372,10 @@ namespace llvm {
                                               uint32_t VBPtrOffset,
                                               DINode::DIFlags Flags);
 
+    // FIXME doc
+    LLVM_ABI DIInterfaceHoldingType *createInterfaceHoldingType(DIType *Ty,
+								DINodeArray Ifaces);
+
     /// Create debugging information entry for a member.
     /// \param Scope        Member scope.
     /// \param Name         Member name.
