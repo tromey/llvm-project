@@ -1443,6 +1443,13 @@ void Verifier::visitTemplateParams(const MDNode &N, const Metadata &RawParams) {
   }
 }
 
+void Verifier::visitDIInterfaceHoldingType(const DIInterfaceHoldingType &N) {
+  CheckDI(isType(N.getRawBaseType()), "invalid base type", &N, N.getRawBaseType());
+  for (const auto *IFace : N.getInterfaces()) {
+    CheckDI(isType(IFace), "invalid interface type", &N, IFace);
+  }
+}
+
 void Verifier::visitDICompositeType(const DICompositeType &N) {
   // Common scope checks.
   visitDIScope(N);
