@@ -1943,7 +1943,7 @@ class DIInterfaceHoldingType : public DIType {
 
   static constexpr unsigned MY_FIRST_OPERAND = DIType::N_OPERANDS;
 
-  DIInterfaceHoldingType(LLVMContext &C, StorageType Storage, ArrayRef<Metadata *> Ops);
+  DIInterfaceHoldingType(LLVMContext &C, unsigned Tag, StorageType Storage, ArrayRef<Metadata *> Ops);
   ~DIInterfaceHoldingType() = default;
 
   static DIInterfaceHoldingType *getImpl(LLVMContext &C, Metadata *BaseType,
