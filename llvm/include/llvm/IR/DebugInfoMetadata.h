@@ -1957,12 +1957,18 @@ class DIInterfaceHoldingType : public DIType {
 					 Metadata *Interfaces,
 					 StorageType Storage, bool ShouldCreate = true);
 
+  TempDIInterfaceHoldingType cloneImpl() const {
+    return getTemporary(getContext(), getRawBaseType(), getRawInterfaces());
+  }
+
 public:
 
   DEFINE_MDNODE_GET(DIInterfaceHoldingType, (DIType *BaseType, DINodeArray Ifaces),
 		    (BaseType, Ifaces));
   DEFINE_MDNODE_GET(DIInterfaceHoldingType, (Metadata *BaseType, Metadata *Ifaces),
 		    (BaseType, Ifaces));
+
+  TempDIInterfaceHoldingType clone() const { return cloneImpl(); }
 
   DIType *getBaseType() const { return cast_or_null<DIType>(getRawBaseType()); }
   Metadata *getRawBaseType() const { return getOperand(MY_FIRST_OPERAND); }
