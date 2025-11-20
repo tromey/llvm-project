@@ -1967,6 +1967,13 @@ public:
   DIType *getBaseType() const { return cast_or_null<DIType>(getRawBaseType()); }
   Metadata *getRawBaseType() const { return getOperand(MY_FIRST_OPERAND); }
 
+  Metadata *getRawInterfaces() const {
+    return getOperand(MY_FIRST_OPERAND + 1);
+  }
+  DINodeArray getInterfaces() const {
+    return cast_or_null<MDTuple>(getRawInterfaces());
+  }
+
   static bool classof(const Metadata *MD) {
     return MD->getMetadataID() == DISubrangeTypeKind;
   }

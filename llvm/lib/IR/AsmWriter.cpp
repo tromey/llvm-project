@@ -2320,6 +2320,15 @@ static void writeDISubrangeType(raw_ostream &Out, const DISubrangeType *N,
   Out << ")";
 }
 
+static void writeDIInterfaceHoldingType(raw_ostream &Out, const DIInterfaceHoldingType *N,
+					AsmWriterContext &WriterCtx) {
+  Out << "!DIInterfaceHoldingType(";
+  MDFieldPrinter Printer(Out, WriterCtx);
+  Printer.printMetadata("baseType", N->getRawBaseType());
+  Printer.printMetadata("interfaces", N->getRawInterfaces());
+  Out << ")";
+}
+
 static void writeDICompositeType(raw_ostream &Out, const DICompositeType *N,
                                  AsmWriterContext &WriterCtx) {
   Out << "!DICompositeType(";
