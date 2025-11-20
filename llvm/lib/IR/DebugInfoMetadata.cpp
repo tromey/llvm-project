@@ -1033,19 +1033,19 @@ DIDerivedType::getPtrAuthData() const {
              : std::nullopt;
 }
 
-DIInterfaceHoldingType::DIInterfaceHoldingType(LLVMContext &C, unsigned Tag,
-					       StorageType Storage, ArrayRef<Metadata *> Ops)
+DIInterfaceHoldingType::DIInterfaceHoldingType(LLVMContext &C, StorageType Storage,
+					       unsigned Tag, ArrayRef<Metadata *> Ops)
   : DIType(C, DIInterfaceHoldingTypeKind, Storage, Tag, 0, 0, 0, DIFlags::FlagZero, Ops)
 { }
 
-DIInterfaceHoldingType *DIInterfaceHoldingType::getImpl(LLVMContext &C, Metadata *BaseType,
+DIInterfaceHoldingType *DIInterfaceHoldingType::getImpl(LLVMContext &Context, Metadata *BaseType,
 							Metadata *Interfaces,
 							StorageType Storage, bool ShouldCreate) {
   assert(BaseType);
-  unsigned Tag = BaseType->getTag();
-  DEFINE_GETIMPL_LOOKUP(
-      DIInterfaceHoldingType,
-      (Tag, BaseType, Interfaces));
+  // HMMM
+  unsigned Tag = dyn_cast<DIType>(BaseType)->getTag();
+  DEFINE_GETIMPL_LOOKUP(DIInterfaceHoldingType,
+			(Tag, BaseType, Interfaces));
   Metadata *Ops[] = {BaseType, Interfaces};
   DEFINE_GETIMPL_STORE(DIInterfaceHoldingType,
                        (Tag),

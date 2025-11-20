@@ -767,6 +767,26 @@ template <> struct MDNodeSubsetEqualImpl<DIDerivedType> {
   }
 };
 
+template <> struct MDNodeKeyImpl<DIInterfaceHoldingType> {
+  unsigned Tag;
+  Metadata *BaseType;
+  Metadata *Interfaces;
+
+  MDNodeKeyImpl(unsigned Tag, Metadata *BaseType, Metadata *Interfaces)
+    : Tag(Tag), BaseType(BaseType), Interfaces(Interfaces) {}
+  MDNodeKeyImpl(const DIInterfaceHoldingType *N)
+    : Tag(N->getTag()), BaseType(N->getRawBaseType()), Interfaces(N->getRawInterfaces())
+  {}
+
+  bool isKeyOf(const DIInterfaceHoldingType *RHS) const {
+    return Tag == RHS->getTag() && BaseType == RHS->getRawBaseType() && Interfaces == RHS->getRawInterfaces();
+  }
+
+  unsigned getHashValue() const {
+    return hash_combine(Tag, BaseType, Interfaces);
+  }
+};
+
 template <> struct MDNodeKeyImpl<DICompositeType> {
   unsigned Tag;
   MDString *Name;
