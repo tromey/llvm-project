@@ -603,9 +603,9 @@ DIE *DwarfUnit::createTypeDIE(const DICompositeType *Ty) {
   return &TyDIE;
 }
 
-void DwarfUnit::constructTypeDIE(DIE &ContextDIE, const DIType *Ty, bool updateAccel) {
+void DwarfUnit::constructTypeDIE(DIE &TyDIE, const DIType *Ty, const DIScope *Context) {
   auto construct = [&](const auto *Ty) {
-    if (updateAccel)
+    if (Context != nullptr)
       updateAcceleratorTables(Context, Ty, TyDIE);
     constructTypeDIE(TyDIE, Ty);
   };
@@ -621,7 +621,7 @@ void DwarfUnit::constructTypeDIE(DIE &ContextDIE, const DIType *Ty, bool updateA
         updateAcceleratorTables(Context, Ty, TyDIE);
         finishNonUnitTypeDIE(TyDIE, CTy);
       }
-      return &TyDIE;
+      return;
     }
     construct(CTy);
   } else if (auto *FPT = dyn_cast<DIFixedPointType>(Ty))
@@ -644,7 +644,7 @@ DIE *DwarfUnit::createTypeDIE(const DIScope *Context, DIE &ContextDIE,
                               const DIType *Ty) {
   // Create new type.
   DIE &TyDIE = createAndAddDIE(Ty->getTag(), ContextDIE, Ty);
-  constructTypeDIE(TyDIE, Ty);
+  constructTypeDIE(TyDIE, Ty, Context);
   return &TyDIE;
 }
 
@@ -1042,7 +1042,7 @@ void DwarfUnit::constructTypeDIE(DIE &Buffer, const DIInterfaceHoldingType *CTy)
   // underlying type is emitted directly, and then the interfaces are
   // attached to it.  Note we don't update the accelerator table here,
   // as that's already been done.
-  constructTypeDIE(Buffer, CTy->getBaseType(), false);
+  constructTypeDIE(Buffer, CTy->getBaseType(), nullptr);
 
   for (const auto *IFace : CTy->getInterfaces()) {
     DIE &Inh = createAndAddDIE(dwarf::DW_TAG_inheritance, Buffer);

@@ -373,7 +373,7 @@ private:
   // Add discriminant constants to a DW_TAG_variant DIE.
   void addDiscriminant(DIE &Variant, Constant *Discriminant, bool IsUnsigned);
 
-  void constructTypeDIE(DIE &Buffer, const DIType *Ty, bool updateAccel = true);
+  void constructTypeDIE(DIE &Buffer, const DIType *Ty, const DIScope *Context);
 
   void constructTypeDIE(DIE &Buffer, const DIBasicType *BTy);
   void constructTypeDIE(DIE &Buffer, const DIFixedPointType *BTy);
