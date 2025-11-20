@@ -357,7 +357,7 @@ private:
                           SmallVectorImpl<uint64_t> &Record, unsigned Abbrev);
   void writeDISubrangeType(const DISubrangeType *N,
                            SmallVectorImpl<uint64_t> &Record, unsigned Abbrev);
-  void writeDIInterfaceHoldingType(const DIInterfaceHoldingType &N,
+  void writeDIInterfaceHoldingType(const DIInterfaceHoldingType *N,
                             SmallVectorImpl<uint64_t> &Record, unsigned Abbrev);
   void writeDICompositeType(const DICompositeType *N,
                             SmallVectorImpl<uint64_t> &Record, unsigned Abbrev);
