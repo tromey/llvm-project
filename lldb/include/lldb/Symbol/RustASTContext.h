@@ -441,7 +441,7 @@ private:
   CompilerType CacheType(RustType *new_type);
 
   RustASTContext(const RustASTContext &) = delete;
-  const RustASTContext &operator=(const RustASTContext &) = delete;
+  RustASTContext &operator=(const RustASTContext &) = delete;
 };
 
 class RustASTContextForExpr : public RustASTContext {

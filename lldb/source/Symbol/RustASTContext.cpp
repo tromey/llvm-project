@@ -1411,7 +1411,10 @@ llvm::Expected<uint32_t> RustASTContext::GetNumChildren(lldb::opaque_compiler_ty
   } else if (RustArray *array = t->AsArray()) {
     result = array->Length();
   } else if (RustTypedef *typ = t->AsTypedef()) {
-    result = typ->UnderlyingType().GetNumChildren(omit_empty_base_classes, exe_ctx);
+    auto R = typ->UnderlyingType().GetNumChildren(omit_empty_base_classes, exe_ctx);
+    if (!R)
+      return R;
+    result = *R;
   } else if (RustAggregateBase *agg = t->AsAggregate()) {
     result = agg->FieldCount();
   }
@@ -1574,7 +1577,7 @@ size_t RustASTContext::GetIndexOfChildMemberWithName(
     lldb::opaque_compiler_type_t type, llvm::StringRef name,
     bool omit_empty_base_classes, std::vector<uint32_t> &child_indexes) {
   auto index = GetIndexOfChildWithName(type, name, omit_empty_base_classes);
-  if (~index || *index == UINT_MAX)
+  if (!index || *index == UINT_MAX)
     return 0;			// FIXME
   child_indexes.push_back(*index);
   return 1;
@@ -1601,7 +1604,9 @@ bool RustASTContext::DumpTypeValue(lldb::opaque_compiler_type_t type, Stream &s,
       CompilerType typedef_compiler_type = typ->UnderlyingType();
       if (format == eFormatDefault)
         format = typedef_compiler_type.GetFormat();
-      uint64_t typedef_byte_size = typedef_compiler_type.GetByteSize(exe_scope);
+      uint64_t typedef_byte_size = 0;
+      if (auto R = typedef_compiler_type.GetByteSize(exe_scope))
+	typedef_byte_size = *R;
 
       return typedef_compiler_type.DumpTypeValue(
           &s,
@@ -1877,8 +1882,7 @@ void RustASTContext::AddFieldToStruct(const CompilerType &struct_type,
                                       bool is_default, uint64_t discriminant) {
   if (!struct_type)
     return;
-  RustASTContext *ast =
-      llvm::dyn_cast_or_null<RustASTContext>(struct_type.GetTypeSystem());
+  auto ast = struct_type.GetTypeSystem<RustASTContext>();
   if (!ast)
     return;
   RustType *type = static_cast<RustType *>(struct_type.GetOpaqueQualType());
@@ -1927,7 +1931,7 @@ bool
 RustASTContext::IsTupleType(const CompilerType &type) {
   if (!type)
     return false;
-  RustASTContext *ast = llvm::dyn_cast_or_null<RustASTContext>(type.GetTypeSystem());
+  auto ast = type.GetTypeSystem<RustASTContext>();
   if (!ast)
     return false;
   RustType *rtype = static_cast<RustType *>(type.GetOpaqueQualType());
@@ -1938,7 +1942,7 @@ bool
 RustASTContext::TypeHasDiscriminant(const CompilerType &type) {
   if (!type)
     return false;
-  RustASTContext *ast = llvm::dyn_cast_or_null<RustASTContext>(type.GetTypeSystem());
+  auto ast = type.GetTypeSystem<RustASTContext>();
   if (!ast)
     return false;
   RustType *rtype = static_cast<RustType *>(type.GetOpaqueQualType());
@@ -1952,7 +1956,7 @@ RustASTContext::GetEnumDiscriminantLocation(const CompilerType &type, uint64_t &
                                             uint64_t &discr_byte_size) {
   if (!type)
     return false;
-  RustASTContext *ast = llvm::dyn_cast_or_null<RustASTContext>(type.GetTypeSystem());
+  auto ast = type.GetTypeSystem<RustASTContext>();
   if (!ast)
     return false;
   RustType *rtype = static_cast<RustType *>(type.GetOpaqueQualType());
@@ -1967,7 +1971,7 @@ CompilerType
 RustASTContext::FindEnumVariant(const CompilerType &type, uint64_t discriminant) {
   if (!type)
     return CompilerType();
-  RustASTContext *ast = llvm::dyn_cast_or_null<RustASTContext>(type.GetTypeSystem());
+  auto ast = type.GetTypeSystem<RustASTContext>();
   if (!ast)
     return CompilerType();
   RustType *rtype = static_cast<RustType *>(type.GetOpaqueQualType());
@@ -1981,7 +1985,7 @@ void
 RustASTContext::FinishAggregateInitialization(const CompilerType &type) {
   if (!type)
     return;
-  RustASTContext *ast = llvm::dyn_cast_or_null<RustASTContext>(type.GetTypeSystem());
+  auto ast = type.GetTypeSystem<RustASTContext>();
   if (!ast)
     return;
   RustType *rtype = static_cast<RustType *>(type.GetOpaqueQualType());
@@ -1996,7 +2000,7 @@ plugin::dwarf::DWARFASTParser *RustASTContext::GetDWARFParser() {
 }
 
 UserExpression *RustASTContextForExpr::GetUserExpression(
-    llvm::StringRef expr, llvm::StringRef prefix, lldb::SourceLanguage language,
+    llvm::StringRef expr, llvm::StringRef prefix, SourceLanguage language,
     Expression::ResultType desired_type,
     const EvaluateExpressionOptions &options, ValueObject *ctx_obj) {
   TargetSP target = m_target_wp.lock();
@@ -2063,7 +2067,7 @@ CompilerDeclContext
 RustASTContext::GetNamespaceDecl(CompilerDeclContext parent, const ConstString &name) {
   if (!parent)
     return CompilerDeclContext();
-  RustASTContext *ast = llvm::dyn_cast_or_null<RustASTContext>(parent.GetTypeSystem());
+  auto ast = parent.GetTypeSystem<RustASTContext>();
   if (!ast)
     return CompilerDeclContext();
 
@@ -2084,7 +2088,7 @@ CompilerDeclContext
 RustASTContext::GetDeclContextDeclContext(CompilerDeclContext child) {
   if (!child)
     return CompilerDeclContext();
-  RustASTContext *ast = llvm::dyn_cast_or_null<RustASTContext>(child.GetTypeSystem());
+  auto ast = child.GetTypeSystem<RustASTContext>();
   if (!ast)
     return CompilerDeclContext();
 
@@ -2096,7 +2100,7 @@ CompilerDecl RustASTContext::GetDecl(CompilerDeclContext parent, const ConstStri
                                      const ConstString &mangled) {
   if (!parent)
     return CompilerDecl();
-  RustASTContext *ast = llvm::dyn_cast_or_null<RustASTContext>(parent.GetTypeSystem());
+  auto ast = parent.GetTypeSystem<RustASTContext>();
   if (!ast)
     return CompilerDecl();
 
@@ -2118,7 +2122,7 @@ bool RustASTContext::GetCABITypeDeclaration(CompilerType type, const std::string
                                             std::string *result) {
   if (!type)
     return false;
-  RustASTContext *ast = llvm::dyn_cast_or_null<RustASTContext>(type.GetTypeSystem());
+  auto ast = type.GetTypeSystem<RustASTContext>();
   if (!ast)
     return false;
   RustType *rtype = static_cast<RustType *>(type.GetOpaqueQualType());
@@ -2154,7 +2158,7 @@ size_t RustASTContext::GetNumTemplateArguments(lldb::opaque_compiler_type_t type
 void RustASTContext::AddTemplateParameter(const CompilerType &type, const CompilerType &param) {
   if (!type)
     return;
-  RustASTContext *ast = llvm::dyn_cast_or_null<RustASTContext>(type.GetTypeSystem());
+  auto ast = type.GetTypeSystem<RustASTContext>();
   if (!ast)
     return;
   RustType *t = static_cast<RustType *>(type.GetOpaqueQualType());
