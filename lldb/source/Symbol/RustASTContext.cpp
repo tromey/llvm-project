@@ -15,7 +15,7 @@
 #include "lldb/Core/PluginManager.h"
 #include "lldb/Host/StreamFile.h"
 #include "lldb/Core/UniqueCStringMap.h"
-#include "lldb/Core/ValueObject.h"
+#include "lldb/ValueObject/ValueObject.h"
 #include "lldb/DataFormatters/StringPrinter.h"
 #include "lldb/Symbol/CompilerType.h"
 #include "lldb/Symbol/RustASTContext.h"
@@ -929,18 +929,6 @@ RustASTContext::~RustASTContext() {}
 //------------------------------------------------------------------
 // PluginInterface functions
 //------------------------------------------------------------------
-
-ConstString RustASTContext::GetPluginNameStatic() {
-  return ConstString("rust");
-}
-
-ConstString RustASTContext::GetPluginName() {
-  return RustASTContext::GetPluginNameStatic();
-}
-
-uint32_t RustASTContext::GetPluginVersion() {
-  return 1;
-}
 
 lldb::TypeSystemSP RustASTContext::CreateInstance(lldb::LanguageType language,
                                                   Module *module,

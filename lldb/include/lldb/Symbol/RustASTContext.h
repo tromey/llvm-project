@@ -38,11 +38,13 @@ public:
   //------------------------------------------------------------------
   // PluginInterface functions
   //------------------------------------------------------------------
-  ConstString GetPluginName() override;
+  llvm::StringRef GetPluginName() override
+  { return GetPluginNameStatic(); }
 
-  uint32_t GetPluginVersion() override;
+  // uint32_t GetPluginVersion() override;
 
-  static ConstString GetPluginNameStatic();
+  static llvm::StringRef GetPluginNameStatic()
+  { return "rust"; }
 
   static lldb::TypeSystemSP CreateInstance(lldb::LanguageType language,
                                            Module *module, Target *target);
@@ -55,7 +57,7 @@ public:
 
   static void Terminate();
 
-  DWARFASTParser *GetDWARFParser() override;
+  plugin::dwarf::DWARFASTParser *GetDWARFParser() override;
 
   void SetAddressByteSize(int byte_size) { m_pointer_byte_size = byte_size; }
 
@@ -81,12 +83,10 @@ public:
   std::vector<CompilerDecl>
   DeclContextFindDeclByName(void *opaque_decl_ctx, ConstString name,
                             const bool ignore_imported_decls) override;
-  bool DeclContextIsStructUnionOrClass(void *opaque_decl_ctx) override;
+  // bool DeclContextIsStructUnionOrClass(void *opaque_decl_ctx) override;
   ConstString DeclContextGetName(void *opaque_decl_ctx) override;
   ConstString DeclContextGetScopeQualifiedName(void *opaque_decl_ctx) override;
-  bool DeclContextIsClassMethod(void *opaque_decl_ctx, lldb::LanguageType *language_ptr,
-                                bool *is_instance_method_ptr,
-                                ConstString *language_object_name_ptr) override;
+  bool DeclContextIsClassMethod(void *opaque_decl_ctx) override;
 
   //----------------------------------------------------------------------
   // Creating Types
@@ -163,11 +163,10 @@ public:
 
   bool IsDefined(lldb::opaque_compiler_type_t type) override;
 
-  bool IsFloatingPointType(lldb::opaque_compiler_type_t type, uint32_t &count,
+  bool IsFloatingPointType(lldb::opaque_compiler_type_t type,
                            bool &is_complex) override;
 
-  bool IsFunctionType(lldb::opaque_compiler_type_t type,
-                      bool *is_variadic_ptr = nullptr) override;
+  bool IsFunctionType(lldb::opaque_compiler_type_t type) override;
 
   size_t
   GetNumberOfFunctionArguments(lldb::opaque_compiler_type_t type) override;
@@ -214,7 +213,8 @@ public:
   // Accessors
   //----------------------------------------------------------------------
 
-  ConstString GetTypeName(lldb::opaque_compiler_type_t type) override;
+  ConstString GetTypeName(lldb::opaque_compiler_type_t type,
+			  bool base_only) override;
 
   uint32_t GetTypeInfo(
       lldb::opaque_compiler_type_t type,
@@ -230,7 +230,7 @@ public:
   //----------------------------------------------------------------------
 
   CompilerType GetArrayElementType(lldb::opaque_compiler_type_t type,
-                                   uint64_t *stride = nullptr) override;
+                                   ExecutionContextScope *exe_scope) override;
 
   CompilerType GetCanonicalType(lldb::opaque_compiler_type_t type) override;
 
@@ -259,17 +259,17 @@ public:
   // Exploring the type
   //----------------------------------------------------------------------
 
-  uint64_t GetBitSize(lldb::opaque_compiler_type_t type,
-                      ExecutionContextScope *exe_scope) override;
+  llvm::Expected<uint64_t> GetBitSize(lldb::opaque_compiler_type_t type,
+				      ExecutionContextScope *exe_scope) override;
 
-  lldb::Encoding GetEncoding(lldb::opaque_compiler_type_t type,
-                             uint64_t &count) override;
+  lldb::Encoding GetEncoding(lldb::opaque_compiler_type_t type) override;
 
   lldb::Format GetFormat(lldb::opaque_compiler_type_t type) override;
 
-  uint32_t GetNumChildren(lldb::opaque_compiler_type_t type,
-                          bool omit_empty_base_classes,
-                          const ExecutionContext *exe_ctx) override;
+  llvm::Expected<uint32_t>
+  GetNumChildren(lldb::opaque_compiler_type_t type,
+		 bool omit_empty_base_classes,
+		 const ExecutionContext *exe_ctx) override;
 
   lldb::BasicType
   GetBasicTypeEnumeration(lldb::opaque_compiler_type_t type) override;
@@ -305,7 +305,7 @@ public:
     return CompilerType();
   }
 
-  CompilerType GetChildCompilerTypeAtIndex(
+  llvm::Expected<CompilerType> GetChildCompilerTypeAtIndex(
       lldb::opaque_compiler_type_t type, ExecutionContext *exe_ctx, size_t idx,
       bool transparent_pointers, bool omit_empty_base_classes,
       bool ignore_array_bounds, std::string &child_name,
@@ -316,9 +316,10 @@ public:
 
   // Lookup a child given a name. This function will match base class names
   // and member member names in "clang_type" only, not descendants.
-  uint32_t GetIndexOfChildWithName(lldb::opaque_compiler_type_t type,
-                                   const char *name,
-                                   bool omit_empty_base_classes) override;
+  llvm::Expected<uint32_t>
+  GetIndexOfChildWithName(lldb::opaque_compiler_type_t type,
+			  llvm::StringRef name,
+			  bool omit_empty_base_classes) override;
 
   // Lookup a child member given a name. This function will match member names
   // only and will descend into "clang_type" children in search for the first
@@ -328,29 +329,34 @@ public:
   // so we catch all names that match a given child name, not just the first.
   size_t
   GetIndexOfChildMemberWithName(lldb::opaque_compiler_type_t type,
-                                const char *name, bool omit_empty_base_classes,
+                                llvm::StringRef name,
+                                bool omit_empty_base_classes,
                                 std::vector<uint32_t> &child_indexes) override;
 
   lldb::TemplateArgumentKind GetTemplateArgumentKind(lldb::opaque_compiler_type_t type,
-						     size_t idx) override {
+						     size_t idx, bool expand_pack) override {
     // Rust currently only has types.
     return lldb::eTemplateArgumentKindType;
   }
 
-  CompilerType GetTypeTemplateArgument(lldb::opaque_compiler_type_t type, size_t idx) override;
-  size_t GetNumTemplateArguments(lldb::opaque_compiler_type_t type) override;
+  CompilerType GetTypeTemplateArgument(lldb::opaque_compiler_type_t type, size_t idx,
+				       bool expand_pack) override;
+  size_t GetNumTemplateArguments(lldb::opaque_compiler_type_t type,
+				 bool expand_pack) override;
 
   //----------------------------------------------------------------------
   // Dumping types
   //----------------------------------------------------------------------
-  void DumpValue(lldb::opaque_compiler_type_t type, ExecutionContext *exe_ctx,
-                 Stream *s, lldb::Format format, const DataExtractor &data,
-                 lldb::offset_t data_offset, size_t data_byte_size,
-                 uint32_t bitfield_bit_size, uint32_t bitfield_bit_offset,
-                 bool show_types, bool show_summary, bool verbose,
-                 uint32_t depth) override;
+  void Dump(llvm::raw_ostream &output, llvm::StringRef filter,
+            bool show_color) override;
+  // void DumpValue(lldb::opaque_compiler_type_t type, ExecutionContext *exe_ctx,
+  //                Stream *s, lldb::Format format, const DataExtractor &data,
+  //                lldb::offset_t data_offset, size_t data_byte_size,
+  //                uint32_t bitfield_bit_size, uint32_t bitfield_bit_offset,
+  //                bool show_types, bool show_summary, bool verbose,
+  //                uint32_t depth) override;
 
-  bool DumpTypeValue(lldb::opaque_compiler_type_t type, Stream *s,
+  bool DumpTypeValue(lldb::opaque_compiler_type_t type, Stream &s,
                      lldb::Format format, const DataExtractor &data,
                      lldb::offset_t data_offset, size_t data_byte_size,
                      uint32_t bitfield_bit_size, uint32_t bitfield_bit_offset,
@@ -360,13 +366,14 @@ public:
       lldb::opaque_compiler_type_t type) override; // Dump to stdout
 
   void DumpTypeDescription(lldb::opaque_compiler_type_t type,
-                           Stream *s) override;
+                           Stream &s,
+			   lldb::DescriptionLevel level = lldb::eDescriptionLevelFull) override;
 
   bool IsRuntimeGeneratedType(lldb::opaque_compiler_type_t type) override;
 
-  void DumpSummary(lldb::opaque_compiler_type_t type, ExecutionContext *exe_ctx,
-                   Stream *s, const DataExtractor &data,
-                   lldb::offset_t data_offset, size_t data_byte_size) override;
+  // void DumpSummary(lldb::opaque_compiler_type_t type, ExecutionContext *exe_ctx,
+  //                  Stream *s, const DataExtractor &data,
+  //                  lldb::offset_t data_offset, size_t data_byte_size) override;
 
   // Converts "s" to a floating point value and place resulting floating
   // point bytes in the "dst" buffer.
@@ -380,7 +387,7 @@ public:
   unsigned GetTypeQualifiers(lldb::opaque_compiler_type_t type) override;
 
   bool IsCStringType(lldb::opaque_compiler_type_t type,
-                     uint32_t &length) override;
+                     uint32_t &length);
 
   size_t GetTypeBitAlign(lldb::opaque_compiler_type_t type) override;
 
@@ -445,7 +452,7 @@ public:
 private:
   int m_pointer_byte_size;
   std::set<std::unique_ptr<RustType>> m_types;
-  std::unique_ptr<DWARFASTParser> m_dwarf_ast_parser_ap;
+  std::unique_ptr<plugin::dwarf::DWARFASTParser> m_dwarf_ast_parser_ap;
 
   std::unique_ptr<RustDeclContext> m_tu_decl;
 
