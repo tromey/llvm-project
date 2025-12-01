@@ -1036,10 +1036,6 @@ bool RustASTContext::IsCStringType(lldb::opaque_compiler_type_t type,
   return false;
 }
 
-bool RustASTContext::IsDefined(lldb::opaque_compiler_type_t type) {
-  return type != nullptr;
-}
-
 bool RustASTContext::IsFloatingPointType(lldb::opaque_compiler_type_t type,
                                          uint32_t &count, bool &is_complex) {
   is_complex = false;
