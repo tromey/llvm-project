@@ -2025,6 +2025,19 @@ CompilerDeclContext RustASTContext::DeclGetDeclContext(void *opaque_decl) {
   return CompilerDeclContext(this, dc->Context());
 }
 
+CompilerType RustASTContext::DeclGetFunctionReturnType(void *opaque_decl) {
+  RustDecl *dc = (RustDecl *) opaque_decl;
+}
+
+size_t RustASTContext::DeclGetFunctionNumArguments(void *opaque_decl) {
+  RustDecl *dc = (RustDecl *) opaque_decl;
+}
+
+CompilerType RustASTContext::DeclGetFunctionArgumentType(void *opaque_decl,
+							 size_t arg_idx) {
+  RustDecl *dc = (RustDecl *) opaque_decl;
+}
+
 ConstString RustASTContext::DeclContextGetName(void *opaque_decl_ctx) {
   RustDeclContext *dc = (RustDeclContext *) opaque_decl_ctx;
   return dc->Name();
@@ -2037,6 +2050,12 @@ ConstString RustASTContext::DeclContextGetScopeQualifiedName(void *opaque_decl_c
 
 bool RustASTContext::DeclContextIsClassMethod(void *opaque_decl_ctx) {
   return false;
+}
+
+lldb::LanguageType RustASTContext::DeclContextGetLanguage(void *opaque_decl_ctx) {
+  if (!opaque_decl_ctx)
+    return eLanguageTypeUnknown;
+  return eLanguageTypeRust;
 }
 
 std::vector<CompilerDecl>
@@ -2067,9 +2086,9 @@ CompilerDeclContext
 RustASTContext::GetNamespaceDecl(CompilerDeclContext parent, const ConstString &name) {
   if (!parent)
     return CompilerDeclContext();
-  auto ast = parent.GetTypeSystem<RustASTContext>();
-  if (!ast)
-    return CompilerDeclContext();
+  // auto ast = parent.GetTypeSystem<RustASTContext>();
+  // if (!ast)
+  //   return CompilerDeclContext();
 
   RustDeclContext *dc = (RustDeclContext *) parent.GetOpaqueDeclContext();
   RustDeclBase *base = dc->FindByName(name);
@@ -2088,9 +2107,9 @@ CompilerDeclContext
 RustASTContext::GetDeclContextDeclContext(CompilerDeclContext child) {
   if (!child)
     return CompilerDeclContext();
-  auto ast = child.GetTypeSystem<RustASTContext>();
-  if (!ast)
-    return CompilerDeclContext();
+  // auto ast = child.GetTypeSystem<RustASTContext>();
+  // if (!ast)
+  //   return CompilerDeclContext();
 
   RustDeclContext *dc = (RustDeclContext *) child.GetOpaqueDeclContext();
   return CompilerDeclContext(this, dc->Context());
@@ -2100,9 +2119,9 @@ CompilerDecl RustASTContext::GetDecl(CompilerDeclContext parent, const ConstStri
                                      const ConstString &mangled) {
   if (!parent)
     return CompilerDecl();
-  auto ast = parent.GetTypeSystem<RustASTContext>();
-  if (!ast)
-    return CompilerDecl();
+  // auto ast = parent.GetTypeSystem<RustASTContext>();
+  // if (!ast)
+  //   return CompilerDecl();
 
   RustDeclContext *dc = (RustDeclContext *) parent.GetOpaqueDeclContext();
   RustDeclBase *base = dc->FindByName(name);

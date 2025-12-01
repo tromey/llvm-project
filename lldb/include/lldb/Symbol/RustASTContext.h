@@ -75,7 +75,12 @@ public:
   ConstString DeclGetName(void *opaque_decl) override;
   ConstString DeclGetMangledName(void *opaque_decl) override;
   CompilerDeclContext DeclGetDeclContext(void *opaque_decl) override;
+  CompilerType DeclGetFunctionReturnType(void *opaque_decl) override;
+  size_t DeclGetFunctionNumArguments(void *opaque_decl) override;
+  CompilerType DeclGetFunctionArgumentType(void *opaque_decl,
+					   size_t arg_idx) override;
 
+  CompilerType GetTypeForDecl(void *opaque_decl) override;
 
   //----------------------------------------------------------------------
   // CompilerDeclContext functions
@@ -87,6 +92,11 @@ public:
   ConstString DeclContextGetName(void *opaque_decl_ctx) override;
   ConstString DeclContextGetScopeQualifiedName(void *opaque_decl_ctx) override;
   bool DeclContextIsClassMethod(void *opaque_decl_ctx) override;
+  lldb::LanguageType DeclContextGetLanguage(void *opaque_decl_ctx) override;
+
+  bool DeclContextIsContainedInLookup(void *opaque_decl_ctx,
+				      void *other_opaque_decl_ctx) override
+  { return false; }
 
   //----------------------------------------------------------------------
   // Creating Types
@@ -151,6 +161,12 @@ public:
   // Tests
   //----------------------------------------------------------------------
 
+#ifndef NDEBUG
+  /// Verify the integrity of the type to catch CompilerTypes that mix
+  /// and match invalid TypeSystem/Opaque type pairs.
+  bool Verify(lldb::opaque_compiler_type_t type) override;
+#endif
+
   bool IsArrayType(lldb::opaque_compiler_type_t type,
                    CompilerType *element_type, uint64_t *size,
                    bool *is_incomplete) override;
@@ -197,6 +213,12 @@ public:
 
   bool SupportsLanguage(lldb::LanguageType language) override;
 
+  bool IsMemberFunctionPointerType(lldb::opaque_compiler_type_t type) override
+  { return false; }
+
+  bool IsScopedEnumerationType(lldb::opaque_compiler_type_t type) override
+  { return false; } 		// FIXME ??
+
   //----------------------------------------------------------------------
   // Type Completion
   //----------------------------------------------------------------------
@@ -208,6 +230,15 @@ public:
   //----------------------------------------------------------------------
 
   uint32_t GetPointerByteSize() override;
+
+  unsigned GetPtrAuthKey(lldb::opaque_compiler_type_t type) override
+  { return 0; }
+
+  unsigned GetPtrAuthDiscriminator(lldb::opaque_compiler_type_t type) override
+  { return 0; }
+
+  bool GetPtrAuthAddressDiversity(lldb::opaque_compiler_type_t type) override
+  { return false; }
 
   //----------------------------------------------------------------------
   // Accessors
@@ -224,6 +255,9 @@ public:
   GetMinimumLanguage(lldb::opaque_compiler_type_t type) override;
 
   lldb::TypeClass GetTypeClass(lldb::opaque_compiler_type_t type) override;
+
+  ConstString GetDisplayTypeName(lldb::opaque_compiler_type_t type) override
+  { return GetTypeName(type, false); }
 
   //----------------------------------------------------------------------
   // Creating related types
@@ -344,9 +378,25 @@ public:
   size_t GetNumTemplateArguments(lldb::opaque_compiler_type_t type,
 				 bool expand_pack) override;
 
+  CompilerType GetEnumerationIntegerType(lldb::opaque_compiler_type_t type) override;
+
+  const llvm::fltSemantics &
+  GetFloatTypeSemantics(size_t byte_size, lldb::Format format) override;
+
+  llvm::Expected<CompilerType>
+  GetDereferencedType(lldb::opaque_compiler_type_t type,
+                      ExecutionContext *exe_ctx, std::string &deref_name,
+                      uint32_t &deref_byte_size, int32_t &deref_byte_offset,
+                      ValueObject *valobj, uint64_t &language_flags) override;
+
   //----------------------------------------------------------------------
   // Dumping types
   //----------------------------------------------------------------------
+#ifndef NDEBUG
+  /// Convenience LLVM-style dump method for use in the debugger only.
+  LLVM_DUMP_METHOD void dump(lldb::opaque_compiler_type_t type) const override;
+#endif
+
   void Dump(llvm::raw_ostream &output, llvm::StringRef filter,
             bool show_color) override;
 
@@ -391,6 +441,9 @@ public:
 
   bool IsVectorType(lldb::opaque_compiler_type_t type,
                     CompilerType *element_type, uint64_t *size) override;
+
+  bool CanPassInRegisters(const CompilerType &type) override
+  { return false; } 		// FIXME
 
   CompilerType
   GetFullyUnqualifiedType(lldb::opaque_compiler_type_t type) override;
