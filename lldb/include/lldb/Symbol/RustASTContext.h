@@ -52,9 +52,8 @@ public:
   static lldb::TypeSystemSP CreateInstance(lldb::LanguageType language,
                                            Module *module, Target *target);
 
-  static void EnumerateSupportedLanguages(
-      std::set<lldb::LanguageType> &languages_for_types,
-      std::set<lldb::LanguageType> &languages_for_expressions);
+  static LanguageSet GetSupportedLanguagesForTypes();
+  static LanguageSet GetSupportedLanguagesForExpressions();
 
   static void Initialize();
 
@@ -85,7 +84,6 @@ public:
   std::vector<CompilerDecl>
   DeclContextFindDeclByName(void *opaque_decl_ctx, ConstString name,
                             const bool ignore_imported_decls) override;
-  // bool DeclContextIsStructUnionOrClass(void *opaque_decl_ctx) override;
   ConstString DeclContextGetName(void *opaque_decl_ctx) override;
   ConstString DeclContextGetScopeQualifiedName(void *opaque_decl_ctx) override;
   bool DeclContextIsClassMethod(void *opaque_decl_ctx) override;
@@ -351,12 +349,6 @@ public:
   //----------------------------------------------------------------------
   void Dump(llvm::raw_ostream &output, llvm::StringRef filter,
             bool show_color) override;
-  // void DumpValue(lldb::opaque_compiler_type_t type, ExecutionContext *exe_ctx,
-  //                Stream *s, lldb::Format format, const DataExtractor &data,
-  //                lldb::offset_t data_offset, size_t data_byte_size,
-  //                uint32_t bitfield_bit_size, uint32_t bitfield_bit_offset,
-  //                bool show_types, bool show_summary, bool verbose,
-  //                uint32_t depth) override;
 
   bool DumpTypeValue(lldb::opaque_compiler_type_t type, Stream &s,
                      lldb::Format format, const DataExtractor &data,
@@ -372,10 +364,6 @@ public:
 			   lldb::DescriptionLevel level = lldb::eDescriptionLevelFull) override;
 
   bool IsRuntimeGeneratedType(lldb::opaque_compiler_type_t type) override;
-
-  // void DumpSummary(lldb::opaque_compiler_type_t type, ExecutionContext *exe_ctx,
-  //                  Stream *s, const DataExtractor &data,
-  //                  lldb::offset_t data_offset, size_t data_byte_size) override;
 
   bool IsPointerOrReferenceType(lldb::opaque_compiler_type_t type,
                                 CompilerType *pointee_type = nullptr) override;
