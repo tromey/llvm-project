@@ -31,6 +31,9 @@ class RustDeclContext;
 class RustType;
 
 class RustASTContext : public TypeSystem {
+private:
+  static char ID;
+
 public:
   RustASTContext();
   ~RustASTContext() override;
@@ -64,9 +67,8 @@ public:
   //------------------------------------------------------------------
   // llvm casting support
   //------------------------------------------------------------------
-  static bool classof(const TypeSystem *ts) {
-    return ts->getKind() == TypeSystem::eKindRust;
-  }
+  bool isA(const void *ClassID) const override { return ClassID == &ID; }
+  static bool classof(const TypeSystem *ts) { return ts->isA(&ID); }
 
   //----------------------------------------------------------------------
   // CompilerDecl functions
@@ -362,8 +364,8 @@ public:
                      uint32_t bitfield_bit_size, uint32_t bitfield_bit_offset,
                      ExecutionContextScope *exe_scope) override;
 
-  void DumpTypeDescription(
-      lldb::opaque_compiler_type_t type) override; // Dump to stdout
+  void DumpTypeDescription(lldb::opaque_compiler_type_t type,
+			   lldb::DescriptionLevel level = lldb::eDescriptionLevelFull) override;
 
   void DumpTypeDescription(lldb::opaque_compiler_type_t type,
                            Stream &s,
@@ -375,18 +377,13 @@ public:
   //                  Stream *s, const DataExtractor &data,
   //                  lldb::offset_t data_offset, size_t data_byte_size) override;
 
-  // Converts "s" to a floating point value and place resulting floating
-  // point bytes in the "dst" buffer.
-  size_t ConvertStringToFloatValue(lldb::opaque_compiler_type_t type,
-                                   const char *s, uint8_t *dst,
-                                   size_t dst_size) override;
-
   bool IsPointerOrReferenceType(lldb::opaque_compiler_type_t type,
                                 CompilerType *pointee_type = nullptr) override;
 
   unsigned GetTypeQualifiers(lldb::opaque_compiler_type_t type) override;
 
-  size_t GetTypeBitAlign(lldb::opaque_compiler_type_t type) override;
+  std::optional<size_t> GetTypeBitAlign(lldb::opaque_compiler_type_t type,
+                  ExecutionContextScope *exe_scope) override;
 
   CompilerType GetBasicTypeFromAST(lldb::BasicType basic_type) override;
 
@@ -462,11 +459,10 @@ private:
 class RustASTContextForExpr : public RustASTContext {
 public:
   RustASTContextForExpr(lldb::TargetSP target) : m_target_wp(target) {}
-  UserExpression *
-  GetUserExpression(llvm::StringRef expr, llvm::StringRef prefix,
-                    lldb::LanguageType language,
-                    Expression::ResultType desired_type,
-                    const EvaluateExpressionOptions &options) override;
+  UserExpression *GetUserExpression(
+      llvm::StringRef expr, llvm::StringRef prefix, SourceLanguage language,
+      Expression::ResultType desired_type,
+      const EvaluateExpressionOptions &options, ValueObject *ctx_obj) override;
 
 private:
   lldb::TargetWP m_target_wp;

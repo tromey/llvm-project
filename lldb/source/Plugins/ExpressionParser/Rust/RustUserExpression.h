@@ -20,7 +20,7 @@ class RustUserExpression : public UserExpression {
 public:
 
   RustUserExpression(ExecutionContextScope &exe_scope, llvm::StringRef expr,
-                     llvm::StringRef prefix, lldb::LanguageType language,
+                     llvm::StringRef prefix, SourceLanguage language,
                      ResultType desired_type,
                      const EvaluateExpressionOptions &options)
     : UserExpression(exe_scope, expr, prefix, language, desired_type, options)

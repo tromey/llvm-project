@@ -53,7 +53,8 @@ class RustType {
 protected:
 
   RustType(const ConstString &name) : m_name(name) {}
-  DISALLOW_COPY_AND_ASSIGN (RustType);
+  RustType(const RustType &) = delete;
+  RustType &operator=(const RustType &) = delete;
 
 public:
 
@@ -94,7 +95,8 @@ private:
 class RustBool : public RustType {
 public:
   RustBool(const ConstString &name) : RustType(name) {}
-  DISALLOW_COPY_AND_ASSIGN(RustBool);
+  RustBool (const RustBool &) = delete;
+  RustBool &operator=(const RustBool &) = delete;
 
   RustBool *AsBool() override {
     return this;
@@ -131,7 +133,8 @@ public:
       m_byte_size(byte_size),
       m_is_char(is_char)
   {}
-  DISALLOW_COPY_AND_ASSIGN(RustIntegral);
+  RustIntegral (const RustIntegral &) = delete;
+  RustIntegral &operator=(const RustIntegral &) = delete;
 
   lldb::Format Format() const override {
     if (m_is_char)
@@ -184,7 +187,8 @@ public:
       m_values(std::move(values))
   {
   }
-  DISALLOW_COPY_AND_ASSIGN(RustCLikeEnum);
+  RustCLikeEnum (const RustCLikeEnum &) = delete;
+  RustCLikeEnum &operator=(const RustCLikeEnum &) = delete;
 
   RustCLikeEnum *AsCLikeEnum() override { return this; }
 
@@ -236,7 +240,8 @@ public:
     : RustType(name),
       m_byte_size(byte_size)
   {}
-  DISALLOW_COPY_AND_ASSIGN(RustFloat);
+  RustFloat (const RustFloat &) = delete;
+  RustFloat &operator=(const RustFloat &) = delete;
 
   lldb::Format Format() const override {
     return eFormatFloat;
@@ -272,7 +277,8 @@ public:
       m_pointee(pointee),
       m_byte_size(byte_size)
   {}
-  DISALLOW_COPY_AND_ASSIGN(RustPointer);
+  RustPointer (const RustPointer &) = delete;
+  RustPointer &operator=(const RustPointer &) = delete;
 
   lldb::Format Format() const override {
     return eFormatPointer;
@@ -319,7 +325,8 @@ public:
       m_length(length),
       m_elem(elem)
   {}
-  DISALLOW_COPY_AND_ASSIGN(RustArray);
+  RustArray (const RustArray &) = delete;
+  RustArray &operator=(const RustArray &) = delete;
 
   uint64_t Length() const { return m_length; }
   RustArray *AsArray() override { return this; }
@@ -361,7 +368,8 @@ protected:
       m_has_discriminant(has_discriminant)
   {}
 
-  DISALLOW_COPY_AND_ASSIGN(RustAggregateBase);
+  RustAggregateBase (const RustAggregateBase &) = delete;
+  RustAggregateBase &operator=(const RustAggregateBase &) = delete;
 
 public:
 
@@ -493,7 +501,8 @@ public:
     : RustAggregateBase(name, byte_size, has_discriminant)
   {}
 
-  DISALLOW_COPY_AND_ASSIGN(RustTuple);
+  RustTuple (const RustTuple &) = delete;
+  RustTuple &operator=(const RustTuple &) = delete;
 
   RustTuple *AsTuple() override { return this; }
 
@@ -556,7 +565,8 @@ public:
     : RustAggregateBase(name, byte_size, has_discriminant)
   {}
 
-  DISALLOW_COPY_AND_ASSIGN(RustStruct);
+  RustStruct (const RustStruct &) = delete;
+  RustStruct &operator=(const RustStruct &) = delete;
 
   const char *Tag() const override {
     return "struct ";
@@ -586,7 +596,8 @@ public:
     : RustAggregateBase(name, byte_size)
   {}
 
-  DISALLOW_COPY_AND_ASSIGN(RustUnion);
+  RustUnion (const RustUnion &) = delete;
+  RustUnion &operator=(const RustUnion &) = delete;
 
   const char *Tag() const override {
     return "union ";
@@ -621,7 +632,8 @@ public:
       m_default(-1)
   {}
 
-  DISALLOW_COPY_AND_ASSIGN(RustEnum);
+  RustEnum (const RustEnum &) = delete;
+  RustEnum &operator=(const RustEnum &) = delete;
 
   RustEnum *AsEnum() override { return this; }
 
@@ -721,7 +733,8 @@ public:
       m_template_args(std::move(template_arguments))
   {
   }
-  DISALLOW_COPY_AND_ASSIGN(RustFunction);
+  RustFunction (const RustFunction &) = delete;
+  RustFunction &operator=(const RustFunction &) = delete;
 
   // do we care about the names?
   void AddArgument(const CompilerType &type) {
@@ -790,7 +803,8 @@ public:
   {
   }
 
-  DISALLOW_COPY_AND_ASSIGN(RustTypedef);
+  RustTypedef (const RustTypedef &) = delete;
+  RustTypedef &operator=(const RustTypedef &) = delete;
 
   RustTypedef *AsTypedef() override { return this; }
   CompilerType UnderlyingType() const { return m_type; }
@@ -919,7 +933,7 @@ private:
 using namespace lldb_private;
 
 RustASTContext::RustASTContext()
-    : TypeSystem(eKindRust),
+    : TypeSystem(),
       m_pointer_byte_size(0)
 {
 }
@@ -1574,16 +1588,6 @@ size_t RustASTContext::GetIndexOfChildMemberWithName(
     return 0;
   child_indexes.push_back(index);
   return 1;
-}
-
-// Converts "s" to a floating point value and place resulting floating
-// point bytes in the "dst" buffer.
-size_t
-RustASTContext::ConvertStringToFloatValue(lldb::opaque_compiler_type_t type,
-                                        const char *s, uint8_t *dst,
-                                        size_t dst_size) {
-  assert(false);
-  return 0;
 }
 
 //----------------------------------------------------------------------
