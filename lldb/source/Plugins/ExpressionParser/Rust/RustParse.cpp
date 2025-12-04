@@ -9,7 +9,7 @@
 
 #include "RustParse.h"
 #include "lldb/Core/Module.h"
-#include "lldb/Core/ValueObject.h"
+#include "lldb/ValueObject/ValueObject.h"
 #include "lldb/Expression/DiagnosticManager.h"
 #include "lldb/Symbol/Block.h"
 #include "lldb/Symbol/Function.h"

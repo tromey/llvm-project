@@ -16,6 +16,7 @@
 #include "lldb/lldb-private.h"
 
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringMap.h"
 #include "lldb/Utility/Stream.h"
 
 namespace lldb_private {
@@ -74,7 +75,7 @@ struct Token {
 
   std::optional<uint64_t> uinteger;
   std::optional<double> dvalue;
-  // This can be NULL if no suffix was specified.
+  // This can be nullptr if no suffix was specified.
   const char *number_suffix = nullptr;
   std::string str;
 

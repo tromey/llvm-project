@@ -12,7 +12,7 @@
 
 #include "lldb/Core/Address.h"
 #include "lldb/Core/Value.h"
-#include "lldb/Core/ValueObjectList.h"
+#include "lldb/ValueObject/ValueObjectList.h"
 #include "lldb/Expression/FunctionCaller.h"
 #include "lldb/Symbol/CompilerType.h"
 #include "lldb/Target/Process.h"

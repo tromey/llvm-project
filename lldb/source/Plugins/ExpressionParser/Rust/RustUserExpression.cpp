@@ -8,7 +8,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "RustUserExpression.h"
-#include "lldb/Core/ValueObject.h"
+#include "lldb/ValueObject/ValueObject.h"
 #include "lldb/Expression/DiagnosticManager.h"
 #include "lldb/Expression/ExpressionVariable.h"
 #include "lldb/Symbol/RustASTContext.h"

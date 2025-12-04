@@ -1490,8 +1490,10 @@ llvm::Expected<CompilerType> RustASTContext::GetChildCompilerTypeAtIndex(
     uint64_t bit_offset;
     CompilerType ret =
         GetFieldAtIndex(type, idx, child_name, &bit_offset, nullptr, nullptr);
-    child_byte_size = ret.GetByteSize(
-        exe_ctx ? exe_ctx->GetBestExecutionContextScope() : nullptr);
+    auto R = ret.GetByteSize(exe_ctx ? exe_ctx->GetBestExecutionContextScope() : nullptr);
+    if (!R)
+      return R.takeError();
+    child_byte_size = *R;
     child_byte_offset = bit_offset / 8;
     return ret;
   } else if (RustPointer *ptr = t->AsPointer()) {
@@ -1508,7 +1510,7 @@ llvm::Expected<CompilerType> RustASTContext::GetChildCompilerTypeAtIndex(
           language_flags);
     } else {
       child_is_deref_of_parent = true;
-      const char *parent_name = valobj ? valobj->GetName().GetCString() : NULL;
+      const char *parent_name = valobj ? valobj->GetName().GetCString() : nullptr;
       if (parent_name) {
         child_name.assign(1, '*');
         child_name += parent_name;
@@ -1516,8 +1518,10 @@ llvm::Expected<CompilerType> RustASTContext::GetChildCompilerTypeAtIndex(
 
       // We have a pointer to an simple type
       if (idx == 0 && pointee.GetCompleteType()) {
-        child_byte_size = pointee.GetByteSize(
-            exe_ctx ? exe_ctx->GetBestExecutionContextScope() : NULL);
+	auto R = pointee.GetByteSize(exe_ctx ? exe_ctx->GetBestExecutionContextScope() : nullptr);
+	if (!R)
+	  return R.takeError();
+        child_byte_size = *R;
         child_byte_offset = 0;
         return pointee;
       }
@@ -1529,8 +1533,11 @@ llvm::Expected<CompilerType> RustASTContext::GetChildCompilerTypeAtIndex(
         char element_name[64];
         ::snprintf(element_name, sizeof(element_name), "[%zu]", idx);
         child_name.assign(element_name);
-        child_byte_size = element_type.GetByteSize(
-            exe_ctx ? exe_ctx->GetBestExecutionContextScope() : NULL);
+	auto R = element_type.GetByteSize(
+            exe_ctx ? exe_ctx->GetBestExecutionContextScope() : nullptr);
+	if (!R)
+	  return R.takeError();
+        child_byte_size = *R;
         child_byte_offset = (int32_t)idx * (int32_t)child_byte_size;
         return element_type;
       }

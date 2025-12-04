@@ -329,7 +329,7 @@ private:
 class RustRangeExpression : public RustExpression {
 public:
 
-  // Either or both can be NULL here.
+  // Either or both can be nullptr here.
   RustRangeExpression(RustExpressionUP &&left,
 		      RustExpressionUP &&right,
                       bool inclusive)

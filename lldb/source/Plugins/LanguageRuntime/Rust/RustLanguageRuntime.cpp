@@ -70,7 +70,7 @@ bool RustLanguageRuntime::GetDynamicTypeAndAddress(
   value_type = Value::ValueType::eValueTypeScalar;
 
   CompilerType type = in_value.GetCompilerType();
-  RustASTContext *ast = llvm::dyn_cast_or_null<RustASTContext>(type.GetTypeSystem());
+  RustASTContext *ast = type.GetTypeSystem<RustASTContext>();
 
   if (!ast) {
     return false;
